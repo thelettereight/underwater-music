@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "underwater_music",
+  "version": "${version}",
+  "name": "Underwater Music",
+  "description": "Experience Minecraft's soundtrack as though you're actually hearing it through water.",
+  "authors": ["Underwater Music"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["dev.underwatermusic.UnderwaterMusicClient"],
+    "modmenu": ["dev.underwatermusic.ModMenuIntegration"]
+  },
+  "mixins": ["underwater_music.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
