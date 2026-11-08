@@ -1,7 +1,9 @@
 package dev.underwatermusic;
 
+import java.lang.reflect.Method;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -27,11 +29,10 @@ public class UnderwaterMusicScreen extends Screen {
         int y0 = 34;
         int row = H + GAP;
 
-        StringWidget title = new StringWidget(this.width / 2 - 100, 12, 200, 9, this.title, this.font);
-        title.alignCenter();
-        this.addRenderableWidget(title);
+        int tw = this.font.width(this.title);
+        StringWidget titleWidget = new StringWidget(this.width / 2 - tw / 2, 12, tw, 9, this.title, this.font);
+        this.addRenderableWidget(titleWidget);
 
-        // Left column: toggles
         toggle(left, y0, "Mod enabled", c.enabled, v -> c.enabled = v);
         toggle(left, y0 + row, "Low-pass filter", c.lowPassEnabled, v -> c.lowPassEnabled = v);
         toggle(left, y0 + row * 2, "Volume reduction", c.volumeReductionEnabled, v -> c.volumeReductionEnabled = v);
@@ -41,7 +42,6 @@ public class UnderwaterMusicScreen extends Screen {
         toggle(left, y0 + row * 6, "Fade in", c.fadeIn, v -> c.fadeIn = v);
         toggle(left, y0 + row * 7, "Fade out", c.fadeOut, v -> c.fadeOut = v);
 
-        // Right column: sliders
         this.addRenderableWidget(new Opt(right, y0, "Underwater volume", 0, 100, c.underwaterVolume, "%.0f%%", v -> c.underwaterVolume = v));
         this.addRenderableWidget(new Opt(right, y0 + row, "Low-pass", 200, 5000, c.lowPassFrequency, "%.0f Hz", v -> c.lowPassFrequency = v));
         this.addRenderableWidget(new Opt(right, y0 + row * 2, "Pitch reduction", 0, 20, c.pitchReduction, "%.0f%%", v -> c.pitchReduction = v));
@@ -60,10 +60,26 @@ public class UnderwaterMusicScreen extends Screen {
                 }));
     }
 
+    /** Opens a screen without depending on the exact method name (renamed between versions). */
+    private static void openScreen(Minecraft mc, Screen target) {
+        for (Method m : Minecraft.class.getMethods()) {
+            if (m.getName().startsWith("setScreen") && m.getParameterCount() == 1
+                    && m.getParameterTypes()[0] == Screen.class) {
+                try {
+                    m.invoke(mc, target);
+                } catch (Exception e) {
+                    UnderwaterMusicClient.LOGGER.warn("Could not open screen", e);
+                }
+                return;
+            }
+        }
+        UnderwaterMusicClient.LOGGER.warn("No setScreen method found");
+    }
+
     @Override
     public void onClose() {
         UMConfig.save();
-        if (this.minecraft != null) this.minecraft.setScreen(parent);
+        if (this.minecraft != null) openScreen(this.minecraft, parent);
     }
 
     @Override
